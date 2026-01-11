@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قنوات SINMAR+</title>
+    <style>
+        :root { --bg: #050505; --cyan: #00E5FF; --white: #FFFFFF; }
+        body { background: var(--bg); color: var(--white); font-family: sans-serif; margin: 0; padding: 20px 50px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logo { font-size: 28px; font-weight: 900; } .logo span { color: var(--cyan); }
+        .search-box { background: #111; border: 2px solid #333; padding: 10px 20px; border-radius: 5px; width: 350px; }
+        .search-box input { background: transparent; border: none; color: white; width: 100%; outline: none; }
+        .group-title { font-size: 22px; color: var(--cyan); margin: 30px 0 10px; border-right: 4px solid var(--cyan); padding-right: 10px; }
+        .row { display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
+        .card { min-width: 160px; height: 100px; background: #111; border-radius: 8px; border: 3px solid transparent; cursor: pointer; flex-shrink: 0; position: relative; outline: none; }
+        .card:focus { border-color: white; transform: scale(1.1); z-index: 10; }
+        .card img { width: 100%; height: 100%; object-fit: contain; }
+        .card-name { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); font-size: 10px; text-align: center; padding: 3px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">SINMAR<span>+</span> | LIVE</div>
+        <div class="search-box"><input type="text" id="search-input" placeholder="ابحث عن قناة..."></div>
+    </div>
+    <div id="loader" style="color: var(--cyan);">جاري جلب القنوات...</div>
+    <div id="content"></div>
+
+    <script>
+        let groups = {};
+        const apiUrl = "https://round-dew-df56.sinmwaz1.workers.dev/";
+
+        async function load() {
+            try {
+                const res = await fetch(apiUrl);
+                const data = await res.json();
+                groups = data.live_tv || {}; // جلب قسم اللايف فقط
+                
+                render(groups);
+                document.getElementById('loader').style.display = 'none';
+            } catch (e) { document.getElementById('loader').innerText = "خطأ في الاتصال بالسيرفر"; }
+        }
+
+        function render(data) {
+            const container = document.getElementById('content');
+            container.innerHTML = "";
+            for (let gName in data) {
+                if (data[gName].length === 0) continue;
+                let section = document.createElement('div');
+                section.innerHTML = `<div class="group-title">${gName === "غير مصنف" ? "القنوات العامة" : gName}</div>`;
+                let row = document.createElement('div'); row.className = "row";
+                data[gName].forEach(ch => {
+                    let card = document.createElement('div');
+                    card.className = "card"; card.tabIndex = "0";
+                    card.innerHTML = `<img src="${ch.logo}" onerror="this.src='https://via.placeholder.com/160x100/111/444?text=TV'"><div class="card-name">${ch.name}</div>`;
+                    card.onclick = () => window.location.href = `intent:${ch.url}#Intent;package=org.videolan.vlc;type=video/*;end`;
+                    row.appendChild(card);
+                });
+                section.appendChild(row);
+                container.appendChild(section);
+            }
+            if (document.querySelector('.card')) document.querySelector('.card').focus();
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            let filtered = {};
+            for (let g in groups) {
+                let chs = groups[g].filter(c => c.name.toLowerCase().includes(term));
+                if (chs.length > 0) filtered[g] = chs;
+            }
+            render(filtered);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const active = document.activeElement;
+            if (e.key === "ArrowRight") active.nextElementSibling?.focus();
+            if (e.key === "ArrowLeft") active.previousElementSibling?.focus();
+            if (e.key === "ArrowDown") active.parentElement.nextElementSibling?.querySelector('.card')?.focus();
+            if (e.key === "ArrowUp") active.parentElement.previousElementSibling?.querySelector('.card')?.focus() || document.getElementById('search-input').focus();
+            if (e.key === "Backspace") window.location.href = "index.html";
+        });
+        load();
+    </script>
+</body>
+</html>

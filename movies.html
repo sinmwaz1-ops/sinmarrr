@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الأفلام | SINMAR+</title>
+    <style>
+        :root { --bg: #050505; --cyan: #00E5FF; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; padding: 20px 50px; }
+        .top { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 10px 0; border-bottom: 1px solid #222; }
+        .logo { font-size: 24px; font-weight: bold; } .logo span { color: var(--cyan); }
+        .search-box { background: #111; border: 2px solid #333; padding: 10px 20px; border-radius: 30px; width: 300px; }
+        .search-box input { background: transparent; border: none; color: white; width: 100%; outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card { background: #111; border-radius: 10px; border: 3px solid transparent; cursor: pointer; transition: 0.3s; height: 240px; position: relative; }
+        .card:focus { border-color: var(--cyan); transform: scale(1.1); outline: none; z-index: 5; }
+        .card img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+        .card-t { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); font-size: 11px; padding: 5px; text-align: center; }
+        #ld { text-align: center; margin-top: 50px; font-size: 20px; color: var(--cyan); }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <div class="logo">SINMAR<span>+</span> | MOVIES</div>
+        <div class="search-box"><input type="text" id="srch" placeholder="ابحث عن فيلم..."></div>
+    </div>
+    <div id="ld">جاري جلب الأفلام...</div>
+    <div class="grid" id="grd"></div>
+
+    <script>
+        let movies = [];
+        const apiUrl = "https://round-dew-df56.sinmwaz1.workers.dev/";
+        
+        async function loadData() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                // دمج كافة تصنيفات الأفلام في مصفوفة واحدة للعرض
+                let movieGroups = data.movies || {};
+                movies = [];
+                for (let group in movieGroups) {
+                    movies = movies.concat(movieGroups[group]);
+                }
+                
+                if (movies.length === 0) {
+                    document.getElementById('ld').innerText = "لم يتم العثور على أفلام.";
+                } else {
+                    render(movies);
+                    document.getElementById('ld').style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('ld').innerHTML = "حدثت مشكلة في جلب البيانات.";
+            }
+        }
+
+        function render(arr) {
+            const grid = document.getElementById('grd');
+            grid.innerHTML = arr.map(m => `
+                <div class="card" tabindex="0" onclick="play('${m.url}')">
+                    <img src="${m.logo}" onerror="this.src='https://via.placeholder.com/160x240/111/444?text=SINMAR'">
+                    <div class="card-t">${m.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function play(url) {
+            window.location.href = `intent:${url}#Intent;package=org.videolan.vlc;type=video/*;end`;
+        }
+
+        document.getElementById('srch').oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            render(movies.filter(m => m.name.toLowerCase().includes(term)));
+        };
+
+        loadData();
+    </script>
+</body>
+</html>
