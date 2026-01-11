@@ -7,74 +7,80 @@
         :root { --bg: #050505; --cyan: #00E5FF; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
         
-        /* الخلفية المظلمة المحيطة بالنص - تصميمك الأصلي */
-        .overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, transparent 50%, rgba(0,0,0,0.9) 100%),
-                        linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%, rgba(0,0,0,0.9) 100%);
-            z-index: 1;
-        }
-
-        /* البوستر اللي ورا - نفس الصورة اللي اخترتها */
+        /* البوستر الخلفي - تصميمك الأصلي */
         .hero { 
             height: 100vh; width: 100%; 
             background: url('https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070') center/cover;
-            display: flex; align-items: center; justify-content: center; text-align: center;
+            display: flex; align-items: center; justify-content: center; position: relative;
         }
 
-        .content { z-index: 2; position: relative; }
-        .logo { font-size: 80px; font-weight: 900; margin-bottom: 10px; text-shadow: 0 0 30px rgba(0,229,255,0.6); }
+        /* التظليل لبروز النص */
+        .overlay {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.9) 100%);
+            z-index: 1;
+        }
+
+        .content { z-index: 2; text-align: center; }
+        .logo { font-size: 80px; font-weight: 900; margin-bottom: 5px; text-shadow: 0 0 30px rgba(0,229,255,0.6); }
         .logo span { color: var(--cyan); }
-        .tagline { font-size: 24px; color: var(--cyan); letter-spacing: 4px; font-weight: bold; text-shadow: 2px 2px 10px black; }
+        .tagline { font-size: 20px; color: var(--cyan); letter-spacing: 3px; font-weight: bold; margin-bottom: 40px; }
         
-        .nav-menu { display: flex; gap: 30px; justify-content: center; margin-top: 50px; }
+        .nav-menu { display: flex; gap: 25px; justify-content: center; }
         
-        /* تصميم الأزرار مع تعديل بسيط للريموت */
+        /* أزرار الريموت المحسنة */
         .nav-item { 
-            font-size: 22px; padding: 12px 35px; border-radius: 50px; 
-            background: rgba(255,255,255,0.1); border: 3px solid transparent; 
-            cursor: pointer; transition: 0.3s; color: #ccc; outline: none;
+            font-size: 24px; padding: 15px 45px; border-radius: 50px; 
+            background: rgba(255,255,255,0.1); border: 4px solid transparent; 
+            cursor: pointer; transition: 0.2s; color: #fff; outline: none;
+            text-decoration: none; display: inline-block;
         }
 
-        /* هذا التعديل عشان الريموت يظهر بوضوح (برواز سماوي) */
+        /* البرواز السماوي لضمان رؤية الريموت */
         .nav-item:focus { 
             border-color: var(--cyan); 
-            color: white; 
-            background: rgba(0,229,255,0.3); 
-            transform: scale(1.1); 
-            box-shadow: 0 0 20px var(--cyan);
+            background: rgba(0,229,255,0.4); 
+            transform: scale(1.15); 
+            box-shadow: 0 0 30px var(--cyan);
         }
 
-        .footer { position: absolute; bottom: 30px; width: 100%; text-align: center; color: rgba(255,255,255,0.3); font-size: 14px; letter-spacing: 3px; z-index: 2; }
+        .footer { position: absolute; bottom: 30px; width: 100%; text-align: center; color: rgba(255,255,255,0.4); font-size: 14px; z-index: 2; }
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
     <div class="hero">
+        <div class="overlay"></div>
         <div class="content">
             <div class="logo">SINMAR<span>+</span></div>
-            <div class="tagline">THE ULTIMATE GLOBAL ENTERTAINMENT DESTINATION</div>
+            <div class="tagline">THE ULTIMATE GLOBAL ENTERTAINMENT</div>
+            
             <div class="nav-menu">
-                <div class="nav-item" tabindex="0" onclick="window.location.href='movies.html'">MOVIES</div>
-                <div class="nav-item" tabindex="0" onclick="window.location.href='live.html'">LIVE TV</div>
+                <a href="movies.html" class="nav-item" tabindex="1">MOVIES</a>
+                <a href="live.html" class="nav-item" tabindex="2">LIVE TV</a>
             </div>
         </div>
     </div>
-    <div class="footer">PREMIUM GLOBAL CONTENT EXPERIENCE</div>
+    <div class="footer">PREMIUM EXPERIENCE</div>
 
     <script>
-        // أول ما يفتح التطبيق، الريموت يوقف على أول زر تلقائياً
-        window.onload = () => {
-            document.querySelector('.nav-item').focus();
-        };
+        // دالة التركيز التلقائي
+        function initRemote() {
+            const firstButton = document.querySelector('.nav-item');
+            if (firstButton) {
+                firstButton.focus();
+            }
+        }
 
-        // كود التحكم بالأسهم يمين ويسار للريموت
+        // تشغيل عند التحميل
+        window.onload = initRemote;
+
+        // إدارة الأسهم (يمين ويسار)
         document.addEventListener('keydown', (e) => {
             const active = document.activeElement;
-            if (e.key === "ArrowRight") {
-                active.nextElementSibling?.focus();
-            } else if (e.key === "ArrowLeft") {
-                active.previousElementSibling?.focus();
+            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                const buttons = document.querySelectorAll('.nav-item');
+                if (active === buttons[0]) buttons[1].focus();
+                else buttons[0].focus();
             }
         });
     </script>
